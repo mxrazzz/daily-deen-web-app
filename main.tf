@@ -16,6 +16,18 @@ terraform {
       version = "~> 5.0"
     }
   }
+  
+  # ═══════════════════════════════════════════════════════════
+  # REMOTE BACKEND: Store state in S3
+  # ═══════════════════════════════════════════════════════════
+  # This solves the "duplicate resource" problem!
+  # State file is saved in S3, so Terraform remembers what it created
+  
+  backend "s3" {
+    bucket = "daily-deen-terraform-state-meraz"  # ⚠️ CHANGE THIS to your bucket name!
+    key    = "terraform.tfstate"
+    region = "us-east-1"
+  }
 }
 
 provider "aws" {
