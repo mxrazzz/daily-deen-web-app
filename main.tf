@@ -4,9 +4,22 @@
   It is SECURE because all secrets are passed in as variables.
 */
 
-provider "aws" {
-    region = "us-east-1"
+# ═══════════════════════════════════════════════════════════
+# TERRAFORM CONFIGURATION
+# ═══════════════════════════════════════════════════════════
+terraform {
+  required_version = ">= 1.0"
+  
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
 
+provider "aws" {
+  region = "us-east-1"
 }
 // --- These are our "placeholders" for secrets ---
 
@@ -26,7 +39,7 @@ variable "my_ip" {
 
 // 1. The "Guest List" (Security Group)
 resource "aws_security_group" "web_sg" {
-  name        = "web-sg"
+  name_prefix = "daily-deen-web-sg-"  # Using name_prefix - creates unique names!
   description = "Allow web and SSH traffic"
 
   // Rule 1: Allow "everyone" in the "front door" (HTTP)
@@ -53,20 +66,28 @@ resource "aws_security_group" "web_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  
+  tags = {
+    Name = "Daily Deen Web Security Group"
+  }
 }
 
 // 2. The "Back Door Key" (SSH Key Pair)
 resource "aws_key_pair" "deployer" {
-  key_name   = "my-project-key"
+  key_name_prefix = "daily-deen-key-"  # Using name_prefix - creates unique names!
   // This USES our secret public key from the "Key Safe"
   public_key = var.ssh_public_key
+  
+  tags = {
+    Name = "Daily Deen SSH Key"
+  }
 }
 
 // 3. The "Store" (EC2 Instance)
 resource "aws_instance" "web_server" {
   ami           = "ami-0cff7528ff583bf9a" // Amazon Linux 2 (Free Tier)
-  instance_type = "t2.micro"              // Free Tier
-  security_groups = [aws_security_group.web_sg.name]
+  instance_type = "t3.micro"              // Free Tier
+  vpc_security_group_ids = [aws_security_group.web_sg.id]  # Better practice than security_groups
   key_name        = aws_key_pair.deployer.key_name
 
   // This script runs when the server is first built.
@@ -76,7 +97,9 @@ resource "aws_instance" "web_server" {
               sudo yum update -y
               sudo yum install python3 -y
               EOF
-  tags = { Name = "My Project Web Server" }
+  tags = { 
+    Name = "Daily Deen Web Server"
+  }
 }
 
 // --- These "Outputs" are like "address labels" ---
