@@ -57,7 +57,26 @@ jobs:
         run: terraform init
         # What this does: Prepares Terraform (downloads AWS provider)
 
-      - name: 📋 Terraform Plan
+      - name: � Import Existing Resources (if they exist)
+        run: |
+          # Try to import security group (ignore error if doesn't exist)
+          terraform import aws_security_group.web_sg daily-deen-web-sg || true
+
+          # Try to import key pair (ignore error if doesn't exist)
+          terraform import aws_key_pair.deployer daily-deen-deployment-key || true
+
+          # Try to import EC2 instance by tag (ignore error if doesn't exist)
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=Daily Deen Web Server" "Name=instance-state-name,Values=running" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text 2>/dev/null || echo "")
+          if [ "$INSTANCE_ID" != "" ] && [ "$INSTANCE_ID" != "None" ]; then
+            terraform import aws_instance.web_server $INSTANCE_ID || true
+          fi
+        continue-on-error: true
+        # What this does: Imports existing AWS resources into Terraform state
+
+      - name: �📋 Terraform Plan
         run: |
           terraform plan \
             -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
