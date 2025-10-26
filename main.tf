@@ -39,7 +39,7 @@ variable "my_ip" {
 
 // 1. The "Guest List" (Security Group)
 resource "aws_security_group" "web_sg" {
-  name_prefix = "daily-deen-web-sg-"  # Using name_prefix - creates unique names!
+  name        = "daily-deen-web-sg"  # Fixed name - reuses same security group!
   description = "Allow web and SSH traffic"
 
   // Rule 1: Allow "everyone" in the "front door" (HTTP)
@@ -70,23 +70,32 @@ resource "aws_security_group" "web_sg" {
   tags = {
     Name = "Daily Deen Web Security Group"
   }
+  
+  # This prevents Terraform from trying to recreate if it already exists
+  lifecycle {
+    ignore_changes = [name]
+  }
 }
 
 // 2. The "Back Door Key" (SSH Key Pair)
 resource "aws_key_pair" "deployer" {
-  key_name_prefix = "daily-deen-key-"  # Using name_prefix - creates unique names!
-  // This USES our secret public key from the "Key Safe"
+  key_name   = "daily-deen-deployment-key"  # Fixed name - always uses the same key!
   public_key = var.ssh_public_key
   
   tags = {
     Name = "Daily Deen SSH Key"
+  }
+  
+  # This tells Terraform: "If key exists, just use it. Don't error out."
+  lifecycle {
+    ignore_changes = [key_name, public_key]  # Don't recreate if already exists
   }
 }
 
 // 3. The "Store" (EC2 Instance)
 resource "aws_instance" "web_server" {
   ami           = "ami-0453ec754f44f9a4a" // Amazon Linux 2023 (Free Tier) - Latest!
-  instance_type = "t2.micro"              // t2.micro is ALWAYS free tier eligible
+  instance_type = "t3.micro"              // t3.micro - newer generation, better performance
   vpc_security_group_ids = [aws_security_group.web_sg.id]  # Better practice than security_groups
   key_name        = aws_key_pair.deployer.key_name
 
