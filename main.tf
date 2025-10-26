@@ -85,8 +85,8 @@ resource "aws_key_pair" "deployer" {
 
 // 3. The "Store" (EC2 Instance)
 resource "aws_instance" "web_server" {
-  ami           = "ami-0cff7528ff583bf9a" // Amazon Linux 2 (Free Tier)
-  instance_type = "t3.micro"              // Free Tier
+  ami           = "ami-0453ec754f44f9a4a" // Amazon Linux 2023 (Free Tier) - Latest!
+  instance_type = "t2.micro"              // t2.micro is ALWAYS free tier eligible
   vpc_security_group_ids = [aws_security_group.web_sg.id]  # Better practice than security_groups
   key_name        = aws_key_pair.deployer.key_name
 
