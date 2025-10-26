@@ -24,7 +24,7 @@ terraform {
   # State file is saved in S3, so Terraform remembers what it created
   
   backend "s3" {
-    bucket = "daily-deen-terraform-state-meraz"  # ⚠️ CHANGE THIS to your bucket name!
+    bucket = "daily-deen-bucket"  # 
     key    = "terraform.tfstate"
     region = "us-east-1"
   }
@@ -51,7 +51,7 @@ variable "my_ip" {
 
 // 1. The "Guest List" (Security Group)
 resource "aws_security_group" "web_sg" {
-  name        = "daily-deen-web-sg"  # Fixed name - reuses same security group!
+  name        = "daily-deen-web-sg"  
   description = "Allow web and SSH traffic"
 
   // Rule 1: Allow "everyone" in the "front door" (HTTP)
