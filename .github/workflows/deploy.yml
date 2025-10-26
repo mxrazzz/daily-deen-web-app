@@ -80,8 +80,10 @@ jobs:
       # STEP 5: Wait for Server to Be Ready
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       - name: ⏳ Wait for EC2 to be ready
-        run: sleep 60
-        # What this does: Gives the server time to boot up (60 seconds)
+        run: |
+          echo "Waiting 120 seconds for EC2 instance to fully boot..."
+          sleep 120
+        # What this does: Gives the server time to boot up (120 seconds for Amazon Linux 2023)
 
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       # STEP 6: Set Up Ansible

@@ -50,13 +50,13 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"] // "0.0.0.0/0" means "anyone"
   }
 
-  // Rule 2: Allow *only me* in the "back door" (SSH)
+  // Rule 2: Allow SSH from anywhere (for GitHub Actions deployment)
+  // ⚠️ For production, restrict this to specific IPs!
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    // This USES our secret IP address from the "Key Safe"
-    cidr_blocks = ["${var.my_ip}/32"]
+    cidr_blocks = ["0.0.0.0/0"]  // Allow SSH from anywhere (including GitHub Actions)
   }
 
   // Allow our server to talk back to the internet
