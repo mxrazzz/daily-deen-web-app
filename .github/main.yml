@@ -1,0 +1,70 @@
+# --- This is the "Robot's Brain" (GitHub Actions) ---
+
+name: Build and Deploy Our App
+
+# This "Robot" wakes up when we "push" new code to our "main" branch.
+on:
+  push:
+    branches: ["main"]
+
+# This sets the "Robot's" permissions.
+permissions:
+  contents: read
+  id-token: write # This is a new, super-secure way to log in to AWS!
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # The "Robot" runs on a clean computer.
+    steps:
+      # 1. Get our project's code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Securely log in to AWS
+      # This uses a "temporary ID badge" (OIDC).
+      # This is the MOST SECURE method. You don't even need AWS keys!
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # 3. Set up Terraform (the "Blueprint" reader)
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # 4. Read the "Blueprint" and build the "Store" (AWS)
+      - name: Terraform Apply (Build our stuff)
+        id: tf-apply
+        run: |
+          terraform init
+          # This command passes our SECRETS from the "Key Safe"
+          # into the "Blueprint's" placeholders (variables).
+          terraform apply -auto-approve \
+            -var "ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" \
+            -var "my_ip=${{ secrets.MY_IP_ADDRESS }}"
+
+      # 5. Build the "Lunchbox" (Docker image)
+      # We read the "Fridge" (ECR) address from the "Blueprint" output
+      - name: Build and push Docker image
+        env:
+          ECR_URL: ${{ steps.tf-apply.outputs.ecr_repository_url }}
+        run: |
+          docker build -t $ECR_URL/my-simple-app:latest .
+          docker push $ECR_URL/my-simple-app:latest
+          echo "ECR_URL=$ECR_URL" >> $GITHUB_ENV
+
+      # 6. Set up the "Setup Manual" (Ansible)
+      - name: Run Ansible to deploy the app
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          # Use the "Setup Manual" file
+          playbook: playbook.yml
+          # Tell Ansible where our "Store" (server) is
+          inventory: ${{ steps.tf-apply.outputs.server_public_dns }},
+          # Give Ansible the "back door" (SSH) key from our "Key Safe"
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Pass in the "blanks" for the "Setup Manual"
+          extra_vars: |
+            ecr_url=${{ env.ECR_URL }}
+            aws_region=us-east-1
