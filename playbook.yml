@@ -13,16 +13,15 @@
     # TASK 1: Install Docker
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     - name: 📦 Update system packages
-      yum:
+      dnf:
         name: "*"
         state: latest
         update_cache: yes
 
     - name: 🐳 Install Docker
-      shell: |
-        amazon-linux-extras install docker -y
-      args:
-        creates: /usr/bin/docker
+      dnf:
+        name: docker
+        state: present
 
     - name: 🚀 Start and enable Docker
       systemd:

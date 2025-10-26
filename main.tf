@@ -23,11 +23,14 @@ terraform {
   # This solves the "duplicate resource" problem!
   # State file is saved in S3, so Terraform remembers what it created
   
-  backend "s3" {
-    bucket = "daily-deen-bucket"  # 
-    key    = "terraform.tfstate"
-    region = "us-east-1"
-  }
+  # ⚠️ TEMPORARILY DISABLED - We'll enable this after first successful deployment
+  # Uncomment these lines after creating the S3 bucket:
+  
+  # backend "s3" {
+  #   bucket = "daily-deen-bucket"
+  #   key    = "terraform.tfstate"
+  #   region = "us-east-1"
+  # }
 }
 
 provider "aws" {
