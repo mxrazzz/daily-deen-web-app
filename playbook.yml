@@ -64,29 +64,25 @@
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     - name: 🏗️ Build Docker image
       shell: |
-        docker build -t daily-deen:latest .
+        sudo docker build -t daily-deen:latest .
       args:
         chdir: /home/ec2-user/website
-      become_user: ec2-user
 
     - name: 🛑 Stop old container
-      shell: docker stop daily-deen-web || true
-      become_user: ec2-user
+      shell: sudo docker stop daily-deen-web || true
       ignore_errors: yes
 
     - name: 🗑️ Remove old container
-      shell: docker rm daily-deen-web || true
-      become_user: ec2-user
+      shell: sudo docker rm daily-deen-web || true
       ignore_errors: yes
 
     - name: 🚀 Run new container
       shell: |
-        docker run -d \
+        sudo docker run -d \
           --name daily-deen-web \
           --restart always \
           -p 80:80 \
           daily-deen:latest
-      become_user: ec2-user
 
     - name: ✅ Verify deployment
       wait_for:
